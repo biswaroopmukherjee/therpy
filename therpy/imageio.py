@@ -44,7 +44,7 @@ def backuploc(lab='bec1'):
     # Find out the os
     from sys import platform as _platform
     # Platform dependent storage
-    if _platform == 'darwin':
+    if _platform == 'darwin' or _platform == 'linux':
         # Mac OS X
         backuppath = os.path.join(basepath, 'Documents', 'My Programs', 'Raw Imagedata Temporary',lab)
     elif _platform == 'win32' or _platform == 'cygwin':
@@ -187,6 +187,13 @@ def imagename2imagepath(imagename, lab='bec1', redownload=False):
             basepath = '\\\\bec1server.mit.edu\\Raw Data\\Images'
         elif lab=='fermi3':
             basepath = '\\\\bec1server.mit.edu\\Raw Data\\Fermi3\\Images'
+    elif _platform == 'linux':
+        # Ubuntu
+        if lab=='bec1':
+            basepath = '/run/user/1000/gvfs/smb-share:server=bec1server.mit.edu,share=raw%20data/Images'
+        elif lab=='fermi3':
+            basepath = '/run/user/1000/gvfs/smb-share:server=bec1server.mit.edu,share=raw%20data/Fermi3/Images'
+
     else:
         # Unknown platform
         basepath = None
@@ -204,6 +211,8 @@ def imagename2imagepath(imagename, lab='bec1', redownload=False):
                     'Image NOT present on the server: Possibly invalid filename or folder location? Not found at : {} and {}'.format(
                         imagepath_today, imagepath))
         # Copy file to backup location
+        print(imagepath)
+        print(imagepath_backup)
         backupimage(imagepath, imagepath_backup)
     # Return the backup path
     return imagepath_backup

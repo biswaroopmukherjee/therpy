@@ -1,0 +1,7 @@
+astropy>=3.0.0
+tqdm
+bec1db
+pandas>=0.24.0
+matplotlib>=3.0.0
+scipy>=1.2.0
+numba
