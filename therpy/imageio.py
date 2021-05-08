@@ -10,7 +10,6 @@ import astropy.io.fits as pyfits
 import matplotlib.pyplot as pp
 from shutil import copyfile
 import warnings
-import paramiko
 import json
 from sys import platform as _platform
 
@@ -111,10 +110,7 @@ def imagename2subfolder(imagename=None, sftp=False):
     imageyear = imagetime.strftime('%Y')
     imagemonth = imagetime.strftime('%Y-%m')
     imagedate = imagetime.strftime('%Y-%m-%d')
-    if sftp:
-        subfolder = imageyear+'/'+imagemonth+'/'+imagedate
-    else:
-        subfolder = os.path.join(imageyear, imagemonth, imagedate)
+    subfolder = os.path.join(imageyear, imagemonth, imagedate)
 
     return subfolder
 
@@ -191,9 +187,9 @@ def imagename2imagepath(imagename, lab='bec1', redownload=False, use_sftp=False)
     elif _platform == 'win32' or _platform == 'cygwin':
         # Windows
         if lab=='bec1':
-            basepath = '\\\\18.62.1.253\\Raw Data\\Images'
+            basepath = '\\\\bec1server.mit.edu\\Raw Data\\Images'
         elif lab=='fermi3':
-            basepath = '\\\\18.62.1.253\\Raw Data\\Fermi3\\Images'
+            basepath = '\\\\bec1server.mit.edu\\Raw Data\\Fermi3\\Images'
     else:
         # Unknown platform
         basepath = None
@@ -212,54 +208,6 @@ def imagename2imagepath(imagename, lab='bec1', redownload=False, use_sftp=False)
                         imagepath_today, imagepath))
         # Copy file to backup location
         backupimage(imagepath, imagepath_backup)
-
-    if use_sftp:# use SFTP to transfer the file
-        print('Server NOT connected!')
-        # try to get creds
-        config_path = os.path.join(os.path.expanduser('~'), 'Documents', 'My Programs', 'config.json')
-
-        if os.path.exists(config_path) is False:
-            raise FileNotFoundError('Please place a config.json file in your Documents/My Programs directory to use SFTP transfer. ')
-        else:
-            try:
-                with open(config_path) as file:
-                    config = json.load(file)
-            except:
-                raise IOError('Problem reading config file')
-            
-        try:
-            ssh = paramiko.SSHClient()
-            ssh.load_system_host_keys()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect('18.62.1.253', username=config.get('user'), password=config.get('pass'))
-            sftp = ssh.open_sftp()
-        except:
-            raise IOError('Connection refused')
-
-        if lab=='bec1':
-            basepath = 'Raw Data/Images'
-        elif lab=='fermi3':
-            basepath = 'Raw Data/Fermi3/Images'
-
-        try: # check if image taken today
-            imagepath_today = basepath+'/'+ subpath+'/'+ imagename
-            sftp.stat(imagepath_today)
-            imagepath = imagepath_today
-        except:
-            try: # check if image taken yesterday
-                imagepath_yesterday = basepath+'/'+ subpath+'/'+ imagename
-                sftp.stat(imagepath_yesterday)
-                imagepath = imagepath_yesterday
-            except: #raise error if no image
-                raise FileNotFoundError(
-                    'Image NOT present on the server: Possibly invalid filename or folder location? Not found at : {} and {}'.format(
-                        imagepath_today, imagepath))
-
-        if not os.path.exists(os.path.join(backuploc(lab), subpath)):
-            os.makedirs(os.path.join(backuploc(lab), subpath))
-        sftp.get(imagepath,imagepath_backup)
-        sftp.close()
-
     # Return the backup path
     return imagepath_backup
 

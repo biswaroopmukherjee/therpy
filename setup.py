@@ -12,8 +12,7 @@ setup(
                         'bec1db',
                         'pandas',
                         'matplotlib',
-                        'scipy',
-                        'paramiko'],
+                        'scipy'],
 
     # metadata
     author='Parth Patel',
